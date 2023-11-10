@@ -3,14 +3,15 @@
 		"noEmit": true,
 		"module": "esnext",
 		"target": "es2020",
-		"lib": ["es2020"],
+		"lib": [
+			"es2020"
+		],
 		"strict": true,
 		"preserveConstEnums": true,
 		"moduleResolution": "node",
 		"sourceMap": true
 	},
 	"ts-node": {
-    		"esm": true
+		"esm": true
 	}
 }
-

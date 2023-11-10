@@ -1,12 +1,12 @@
 services:
   attester:
-    git: "https://github.com/cloudflare/pp-attester"
+    git: "git@github.com:cloudflare/pp-attester.git"
     port: "8788"
   issuer:
     url: "https://pp-issuer-public.research.cloudflare.com"
   origin:
-    file: "./pp-origin"
+    file: "../pat-origin"
     port: "8789"
 
 config:
-  directory: ".dist"
+  directory: "dist"
