@@ -12,7 +12,7 @@ services:
   	port: "8789"
 
 config:
-  directory: ".dist"
+  directory: "dist"
 ```
 
 The service must have:
