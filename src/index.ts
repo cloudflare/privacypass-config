@@ -45,6 +45,9 @@ interface AppConfig {
 async function cloneRepo(gitUrl: string, directory: string) {
   if (!fs.existsSync(directory)) {
     await execa("git", ["clone", gitUrl, directory]);
+  } else {
+    await execa("git", ["fetch", "origin"], { cwd: directory });
+    await execa("git", ["checkout", "origin/main"], { cwd: directory });
   }
 }
 
