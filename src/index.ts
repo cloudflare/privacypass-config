@@ -124,6 +124,14 @@ async function startService(serviceName: string, app: AppConfig) {
   const { serviceType, value } = await getExistingServiceDeployment(
     path.resolve(cwd),
   );
+
+  // Check the config is valid
+  if ([config.git, config.file, config.url].filter(Boolean).length !== 1) {
+    throw new Error(
+      `[${serviceName}] should define one and only one of 'git', 'file', or 'url'`,
+    );
+  }
+
   if (config.git) {
     // Refresh the service directory if the configuration was different
     if (serviceType !== "git" || value !== config.git) {

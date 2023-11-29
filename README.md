@@ -17,7 +17,7 @@ config:
 
 The service must have:
 
-* load the above yaml configuration
+* Load the above yaml configuration
 * Clone repos if they don't exist
 * Start services on their respective port. This imply configuring them if needed (issuer needs a key rotation at start)
 
