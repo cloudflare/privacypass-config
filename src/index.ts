@@ -79,14 +79,65 @@ function getServiceDeployments(app: AppConfig) {
   };
 }
 
+async function getExistingServiceDeployment(path: string) {
+  if (!fs.existsSync(path)) {
+    return {
+      serviceType: "non-initialized",
+    };
+  }
+  const isSymlink = fs.lstatSync(path).isSymbolicLink();
+
+  if (isSymlink) {
+    return {
+      serviceType: "file",
+      value: fs.readlinkSync(path),
+    };
+  }
+
+  // Run the git rev-parse command to check if the path is a Git repository
+  // don't capture the error, let it propagate
+  await execa("git", ["rev-parse", "--is-inside-work-tree"], { cwd: path });
+
+  const { stdout } = await execa("git", ["remote", "get-url", "origin"], {
+    cwd: path,
+  });
+
+  return {
+    serviceType: "git",
+    value: stdout.trim(),
+  };
+}
+
+function rmDir(path: string) {
+  if (!fs.existsSync(path)) {
+    return;
+  }
+  if (fs.lstatSync(path).isSymbolicLink()) {
+    return fs.rmSync(path);
+  }
+  return fs.rmSync(path, { recursive: true, force: true });
+}
+
 async function startService(serviceName: string, app: AppConfig) {
   const cwd = path.join(app.config.directory, serviceName);
   const config = app.services[serviceName];
+  const { serviceType, value } = await getExistingServiceDeployment(
+    path.resolve(cwd),
+  );
   if (config.git) {
+    // Refresh the service directory if the configuration was different
+    if (serviceType !== "git" || value !== config.git) {
+      rmDir(cwd);
+    }
     await cloneRepo(config.git, cwd);
   } else if (config.file) {
+    // Refresh the service directory if the configuration was different
+    if (serviceType !== "file" || value !== path.resolve(config.file)) {
+      rmDir(cwd);
+    }
     await symlinkFolder(config.file, cwd);
   } else if (config.url) {
+    rmDir(path.resolve(cwd));
     // nothing to be initialised
     return;
   }
