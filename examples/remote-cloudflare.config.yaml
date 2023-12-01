@@ -1,0 +1,12 @@
+services:
+  attester:
+    url: "https://pp-attester-turnstile.research.cloudflare.com"
+  issuer:
+    # this issuer is never used, given attester and origin are remote URL.
+    # if attester or origin were to use a local configuration, this would be used.
+    url: "https://pp-issuer-public.research.cloudflare.com"
+  origin:
+    url: "https://demo-pat.research.cloudflare.com"
+
+config:
+  directory: "dist"

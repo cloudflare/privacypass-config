@@ -1,0 +1,13 @@
+services:
+  attester:
+    git: "git@github.com:cloudflare/pp-attester.git"
+    port: "8788"
+  issuer:
+    git: "git@github.com:cloudflare/pp-issuer.git"
+    port: "8787"
+  origin:
+    git: "git@github.com:cloudflare/pp-origin.git"
+    port: "8789"
+
+config:
+  directory: "dist"
