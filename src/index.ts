@@ -49,10 +49,22 @@ interface AppConfig {
 }
 
 async function cloneRepo(gitUrl: string, directory: string) {
+  const parts = gitUrl.split("#");
+  if (parts.length > 2) {
+    throw new Error(`Invalid git URL: ${gitUrl}`);
+  }
+  if (parts.length === 2) {
+    gitUrl = parts[0];
+  }
   if (!fs.existsSync(directory)) {
     await execa("git", ["clone", gitUrl, directory]);
   } else {
     await execa("git", ["fetch", "origin"], { cwd: directory });
+  }
+
+  if (parts.length === 2) {
+    return execa("git", ["checkout", parts[1]], { cwd: directory });
+  } else {
     await execa("git", ["checkout", "origin/main"], { cwd: directory });
   }
 }
