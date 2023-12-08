@@ -1,8 +1,10 @@
 import * as fs from "fs";
 import * as path from "path";
-import { ExecaChildProcess, execa } from "execa";
+import { ExecaChildProcess, Options, execa } from "execa";
 import * as yaml from "js-yaml";
 import { PRIVATE_TOKEN_ISSUER_DIRECTORY } from "@cloudflare/privacypass-ts";
+import { Option, program } from "commander";
+import * as dotenv from "dotenv";
 
 const DEFAULT_SERVICES = {
   attester: {
@@ -31,8 +33,12 @@ interface ServiceConfig {
   url?: string;
   file?: string;
   port?: string;
+  deploy?: {
+    wrangler: string;
+    environment?: string;
+    envFile?: string;
+  };
 }
-
 interface AppConfig {
   services: {
     [key: string]: ServiceConfig;
@@ -58,6 +64,16 @@ async function symlinkFolder(filePath: string, directory: string) {
       : path.resolve(process.cwd(), filePath);
     fs.symlinkSync(absolutePath, directory, "dir");
   }
+}
+
+async function symlinkFile(filePath: string, file: string) {
+  if (fs.existsSync(file)) {
+    fs.rmSync(file);
+  }
+  const absolutePath = path.isAbsolute(filePath)
+    ? filePath
+    : path.resolve(process.cwd(), filePath);
+  fs.symlinkSync(absolutePath, file, "file");
 }
 
 function getServiceDeployment(serviceName: ServiceName, config: ServiceConfig) {
@@ -118,40 +134,8 @@ function rmDir(path: string) {
   return fs.rmSync(path, { recursive: true, force: true });
 }
 
-async function startService(serviceName: string, app: AppConfig) {
+async function startService(serviceName: ServiceName, app: AppConfig) {
   const cwd = path.join(app.config.directory, serviceName);
-  const config = app.services[serviceName];
-  const { serviceType, value } = await getExistingServiceDeployment(
-    path.resolve(cwd),
-  );
-
-  // Check the config is valid
-  if ([config.git, config.file, config.url].filter(Boolean).length !== 1) {
-    throw new Error(
-      `[${serviceName}] should define one and only one of 'git', 'file', or 'url'`,
-    );
-  }
-
-  if (config.git) {
-    // Refresh the service directory if the configuration was different
-    if (serviceType !== "git" || value !== config.git) {
-      rmDir(cwd);
-    }
-    await cloneRepo(config.git, cwd);
-  } else if (config.file) {
-    // Refresh the service directory if the configuration was different
-    if (serviceType !== "file" || value !== path.resolve(config.file)) {
-      rmDir(cwd);
-    }
-    await symlinkFolder(config.file, cwd);
-  } else if (config.url) {
-    rmDir(path.resolve(cwd));
-    // nothing to be initialised
-    return;
-  }
-
-  // Install all dependencies
-  await execa("npm", ["install"], { cwd });
 
   const deployments = getServiceDeployments(app);
   console.log(`Service ${serviceName}: initialisation`);
@@ -206,24 +190,142 @@ async function startService(serviceName: string, app: AppConfig) {
   console.log(`Service ${serviceName}: initialised`);
 }
 
-async function loadConfig(): Promise<AppConfig> {
-  const configFile = "config.yaml";
-  const configContent = fs.readFileSync(configFile, "utf-8");
+async function deployService(serviceName: ServiceName, app: AppConfig) {
+  const cwd = path.join(app.config.directory, serviceName);
+
+  const { deploy } = app.services[serviceName];
+
+  if (!deploy) {
+    throw new Error(`[${serviceName}] should define a 'deploy' section`);
+  }
+
+  const { wrangler: wranglerConfig, environment, envFile } = deploy;
+
+  let options: Options<"utf8"> = { cwd };
+  if (envFile) {
+    const env = dotenv.parse(fs.readFileSync(envFile));
+    options = { ...options, env: { ...process.env, ...env } };
+  }
+
+  const extraArgs = environment ? ["--env", environment] : [];
+
+  await symlinkFile(wranglerConfig, path.join(cwd, "wrangler.toml"));
+
+  console.log(`cwd: ${cwd}`);
+  return execa(
+    "npx",
+    ["wrangler", "deploy", "--config", "./wrangler.toml", ...extraArgs],
+    options,
+  ).pipeStdout!(process.stdout);
+}
+
+async function installService(serviceName: string, app: AppConfig) {
+  const cwd = path.join(app.config.directory, serviceName);
+  const config = app.services[serviceName];
+  const { serviceType, value } = await getExistingServiceDeployment(
+    path.resolve(cwd),
+  );
+
+  // Check the config is valid
+  if ([config.git, config.file, config.url].filter(Boolean).length !== 1) {
+    throw new Error(
+      `[${serviceName}] should define one and only one of 'git', 'file', or 'url'`,
+    );
+  }
+
+  if (config.git) {
+    // Refresh the service directory if the configuration was different
+    if (serviceType !== "git" || value !== config.git) {
+      rmDir(cwd);
+    }
+    await cloneRepo(config.git, cwd);
+  } else if (config.file) {
+    // Refresh the service directory if the configuration was different
+    if (serviceType !== "file" || value !== path.resolve(config.file)) {
+      rmDir(cwd);
+    }
+    await symlinkFolder(config.file, cwd);
+  } else if (config.url) {
+    rmDir(path.resolve(cwd));
+    // nothing to be initialised
+    return;
+  }
+
+  // Install all dependencies
+  await execa("npm", ["install"], { cwd });
+}
+
+async function loadConfig(path: string): Promise<AppConfig> {
+  const configContent = fs.readFileSync(path, "utf-8");
   return yaml.load(configContent) as AppConfig;
 }
 
 async function main() {
-  try {
-    const app = await loadConfig();
+  const packageJson = JSON.parse(fs.readFileSync("package.json", "utf-8"));
+  const version = packageJson.version || "1.0.0";
 
-    for (const [serviceName, _] of Object.entries(app.services)) {
-      await startService(serviceName, app);
-    }
+  program
+    .name("pp-config")
+    .version(version)
+    .description(
+      "Orchestrate the development and deployment of Privacy Pass services",
+    );
 
-    console.log("Services started successfully.");
-  } catch (error: any) {
-    console.error("Error:", error.message);
-  }
+  program
+    .command("dev")
+    .description("Start development server")
+    .option("-c, --config <path>", "Path to configuration file", "config.yaml")
+    .action(async (options) => {
+      try {
+        const app = await loadConfig(options.config);
+
+        for (const [serviceName, _] of Object.entries(app.services)) {
+          await installService(serviceName, app);
+          await startService(serviceName as ServiceName, app);
+        }
+
+        console.log("Services started successfully.");
+      } catch (error: any) {
+        console.error("Error:", error.message);
+      }
+    });
+
+  const defaultServices = Object.keys(DEFAULT_SERVICES);
+  program
+    .command("deploy")
+    .description("Deploy the application")
+    .option("-c, --config <path>", "Path to configuration file", "config.yaml")
+    .addOption(
+      new Option(
+        "--service <name...>",
+        "Name of the service to deploy. By default, deploy all services",
+      ).choices(defaultServices),
+    )
+    .action(async (options) => {
+      try {
+        const app = await loadConfig(options.config);
+
+        const toDeploy = options.service ?? defaultServices;
+
+        for (const serviceName of toDeploy) {
+          await installService(serviceName, app);
+          await deployService(serviceName, app);
+        }
+
+        console.log("Services deployed successfully.");
+      } catch (error: any) {
+        console.error("Error:", error.message);
+      }
+    });
+
+  program
+    .command("help")
+    .description("Display help information")
+    .action(() => {
+      program.outputHelp();
+    });
+
+  program.parse();
 }
 
 process.on("SIGINT", function () {

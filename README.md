@@ -2,6 +2,28 @@
 
 This service allows you to start a Privacy Pass stack locally: an attester, an origin, and an issuer. It leverages Cloudflare repositories.
 
+## Quick start
+
+With node.js 20+
+
+* Install
+
+```shell
+npm install
+```
+
+* Develop
+
+```shell
+npm run start -- dev --config ./examples/git.config.yaml
+```
+
+* Deploy
+
+```shell
+npm run start -- deploy --config ./examples/git.config.yaml --service issuer
+```
+
 ## Config
 
 Example config files are available in [./examples](./examples). You need to place one in the root folder with the name `config.yaml`. For instance, `cp examples/git.config.yaml config.yaml`.
