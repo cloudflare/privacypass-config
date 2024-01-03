@@ -1,5 +1,14 @@
 {
-  "type": "module",
+  "name": "pp-config",
+	"version": "0.1.0",
+	"type": "module",
+	"author": "Thibault Meunier <thibault@cloudflare.com>",
+	"contributors": [
+		"Thibault Meunier <thibault@cloudflare.com>"
+	],
+	"license": "Apache-2.0",
+	"homepage": "https://github.com/cloudflare/pp-config#readme",
+	"repository": "github:cloudflare/pp-config",
   "scripts": {
     "format": "prettier src/*.ts --write",
     "lint": "prettier src/*.ts",
