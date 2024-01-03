@@ -2,6 +2,7 @@
   "type": "module",
   "scripts": {
     "format": "prettier src/*.ts --write",
+    "lint": "prettier src/*.ts",
     "start": "node --loader ts-node/esm ./src/index.ts"
   },
   "dependencies": {
