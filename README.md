@@ -1,4 +1,4 @@
-# pp-config
+# privacypass-config
 
 This service allows you to start a Privacy Pass stack locally: an attester, an origin, and an issuer. It leverages Cloudflare repositories.
 
@@ -33,12 +33,12 @@ The configuration can be a file, a url, or a git. In the case of a file or a git
 ```yaml
 services:
   attester:
-    git: "https://github.com/cloudflare/pp-attester"
+    git: "https://github.com/cloudflare/privacypass-attester"
     port: "8788"
   issuer:
   	url: "https://pp-issuer-public.research.cloudflare.com"
   origin:
-  	file: "./pp-origin"
+  	file: "./privacypass-origin"
   	port: "8789"
 
 config:
@@ -53,5 +53,5 @@ config:
 
 ## Next features
 
-* Started pp-browser-extension in a headless browser
+* Started privacypass-browser-extension in a headless browser
 

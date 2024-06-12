@@ -1,6 +1,6 @@
 services:
   attester:
-    git: "git@github.com:cloudflare/pp-attester.git"
+    git: "git@github.com:cloudflare/privacypass-attester.git"
     port: "8788"
   issuer:
     url: "https://pp-issuer-public.research.cloudflare.com"
