@@ -1,5 +1,5 @@
 {
-  "name": "pp-config",
+  "name": "privacypass-config",
 	"version": "0.1.0",
 	"type": "module",
 	"author": "Thibault Meunier <thibault@cloudflare.com>",

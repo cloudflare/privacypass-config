@@ -1,12 +1,12 @@
 services:
   attester:
-    git: "git@github.com:cloudflare/pp-attester.git"
+    git: "git@github.com:cloudflare/privacypass-attester.git"
     port: "8788"
   issuer:
-    git: "git@github.com:cloudflare/pp-issuer.git"
+    git: "git@github.com:cloudflare/privacypass-issuer.git"
     port: "8787"
   origin:
-    git: "git@github.com:cloudflare/pp-origin.git"
+    git: "git@github.com:cloudflare/privacypass-origin.git"
     port: "8789"
 
 config:

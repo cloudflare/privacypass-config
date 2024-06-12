@@ -1,20 +1,20 @@
 services:
   attester:
-    git: "git@github.com:cloudflare/pp-attester.git"
+    git: "git@github.com:cloudflare/privacypass-attester.git"
     port: "8788"
     deploy:
       wrangler: "./production.attester.wrangler.toml"
       environment: production
       envFile: .env
   issuer:
-    git: "git@github.com:cloudflare/pp-issuer.git"
+    git: "git@github.com:cloudflare/privacypass-issuer.git"
     port: "8787"
     deploy:
       wrangler: "./production.issuer.wrangler.toml"
       environment: production
       envFile: .env
   origin:
-    git: "git@github.com:cloudflare/pp-origin.git"
+    git: "git@github.com:cloudflare/privacypass-origin.git"
     port: "8789"
     deploy:
       wrangler: "./dev.origin.wrangler.toml"
