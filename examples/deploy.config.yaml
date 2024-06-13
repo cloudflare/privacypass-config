@@ -21,7 +21,7 @@ services:
     deploy:
       wrangler: "./dev.origin.wrangler.toml"
       environment: dev
-      # by default, deployment is immidiate
+      # by default, deployment is immediate
 
 config:
   directory: "dist"
