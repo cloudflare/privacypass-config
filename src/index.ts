@@ -291,7 +291,7 @@ async function main() {
   const version = packageJson.version || "1.0.0";
 
   program
-    .name("pp-config")
+    .name("privacypass-config")
     .version(version)
     .description(
       "Orchestrate the development and deployment of Privacy Pass services",

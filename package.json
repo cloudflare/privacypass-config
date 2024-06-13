@@ -7,8 +7,8 @@
 		"Thibault Meunier <thibault@cloudflare.com>"
 	],
 	"license": "Apache-2.0",
-	"homepage": "https://github.com/cloudflare/pp-config#readme",
-	"repository": "github:cloudflare/pp-config",
+	"homepage": "https://github.com/cloudflare/privacypass-config#readme",
+	"repository": "github:cloudflare/privacypass-config",
   "scripts": {
     "format": "prettier src/*.ts --write",
     "lint": "prettier src/*.ts",
