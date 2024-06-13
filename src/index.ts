@@ -28,6 +28,8 @@ const runningServices = {
   origin: null as ExecaChildProcess | null,
 };
 
+const DEFAULT_IMMEDIATE_DEPLOYMENT = true;
+
 interface ServiceConfig {
   git?: string;
   url?: string;
@@ -37,6 +39,7 @@ interface ServiceConfig {
     wrangler: string;
     environment?: string;
     envFile?: string;
+    immediateDeployment?: boolean;
   };
 }
 interface AppConfig {
@@ -211,7 +214,12 @@ async function deployService(serviceName: ServiceName, app: AppConfig) {
     throw new Error(`[${serviceName}] should define a 'deploy' section`);
   }
 
-  const { wrangler: wranglerConfig, environment, envFile } = deploy;
+  const {
+    wrangler: wranglerConfig,
+    environment,
+    envFile,
+    immediateDeployment,
+  } = deploy;
 
   let options: Options<"utf8"> = { cwd };
   if (envFile) {
@@ -224,9 +232,15 @@ async function deployService(serviceName: ServiceName, app: AppConfig) {
   await symlinkFile(wranglerConfig, path.join(cwd, "wrangler.toml"));
 
   console.log(`cwd: ${cwd}`);
+
+  const immediate = immediateDeployment ?? DEFAULT_IMMEDIATE_DEPLOYMENT;
+  const command = immediate
+    ? ["deploy"]
+    : ["versions", "upload", "--experimental-versions"];
+
   return execa(
     "npx",
-    ["wrangler", "deploy", "--config", "./wrangler.toml", ...extraArgs],
+    ["wrangler", ...command, "--config", "./wrangler.toml", ...extraArgs],
     options,
   ).pipeStdout!(process.stdout);
 }

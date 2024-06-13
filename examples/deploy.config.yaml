@@ -6,6 +6,7 @@ services:
       wrangler: "./production.attester.wrangler.toml"
       environment: production
       envFile: .env
+      immediateDeployment: true
   issuer:
     git: "git@github.com:cloudflare/privacypass-issuer.git"
     port: "8787"
@@ -13,12 +14,14 @@ services:
       wrangler: "./production.issuer.wrangler.toml"
       environment: production
       envFile: .env
+      immediateDeployment: false
   origin:
     git: "git@github.com:cloudflare/privacypass-origin.git"
     port: "8789"
     deploy:
       wrangler: "./dev.origin.wrangler.toml"
       environment: dev
+      # by default, deployment is immidiate
 
 config:
   directory: "dist"
