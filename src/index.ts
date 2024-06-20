@@ -35,6 +35,13 @@ interface ServiceConfig {
   url?: string;
   file?: string;
   port?: string;
+  test?: {
+    hostname: string;
+    tlsConfig?: {
+      key: string;
+      cert: string;
+    };
+  };
   deploy?: {
     wrangler: string;
     environment?: string;
@@ -245,6 +252,52 @@ async function deployService(serviceName: ServiceName, app: AppConfig) {
   ).pipeStdout!(process.stdout);
 }
 
+// dev: this method is not designed like I'd like to
+// Ideally, this method reads the route from the deployment wrangler config, and test it
+// However, this does not seem to be exposed by wrangler (cli/library), and doing a full parsing is too much much
+// Therefore, we provide a dedicated key test.hostname in the app config, and test that hostname
+async function testService(serviceName: ServiceName, app: AppConfig) {
+  const cwd = path.join(app.config.directory, serviceName);
+  console.log(`cwd: ${cwd}`);
+
+  const { deploy, test } = app.services[serviceName];
+
+  if (!deploy) {
+    throw new Error(`[${serviceName}] should define a 'deploy' section`);
+  }
+
+  if (!test) {
+    throw new Error(`[${serviceName}] should define a 'test' section`);
+  }
+
+  const extraArgs = test.tlsConfig
+    ? [
+        "--cert",
+        path.resolve(test.tlsConfig.cert),
+        "--key",
+        path.resolve(test.tlsConfig.key),
+      ]
+    : [];
+
+  switch (serviceName) {
+    case "issuer": {
+      const result = await execa(
+        "npm",
+        ["run", "test:e2e", "--", ...extraArgs, test.hostname],
+        { cwd },
+      ).pipeStdout!(process.stdout).pipeStderr!(process.stderr);
+      if (result.exitCode !== 0) {
+        throw new Error(`[${serviceName}] end-to-end test failed`);
+      }
+      break;
+    }
+    default: {
+      console.warn(`[${serviceName}] does not support end-to-end test.`);
+      return;
+    }
+  }
+}
+
 async function installService(serviceName: string, app: AppConfig) {
   const cwd = path.join(app.config.directory, serviceName);
   const config = app.services[serviceName];
@@ -339,6 +392,33 @@ async function main() {
         }
 
         console.log("Services deployed successfully.");
+      } catch (error: any) {
+        console.error("Error:", error.message);
+      }
+    });
+
+  program
+    .command("test")
+    .description("Test the application end-to-end")
+    .option("-c, --config <path>", "Path to configuration file", "config.yaml")
+    .addOption(
+      new Option(
+        "--service <name...>",
+        "Name of the service to test. By default, test all services",
+      ).choices(defaultServices),
+    )
+    .action(async (options) => {
+      try {
+        const app = await loadConfig(options.config);
+
+        const toTest = options.service ?? defaultServices;
+
+        for (const serviceName of toTest) {
+          await installService(serviceName, app);
+          await testService(serviceName, app);
+        }
+
+        console.log("Services tested successfully.");
       } catch (error: any) {
         console.error("Error:", error.message);
       }

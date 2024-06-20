@@ -1,0 +1,21 @@
+services:
+  attester:
+    url: "https://pp-attester-turnstile.research.cloudflare.com"
+  issuer:
+    git: "git@github.com:cloudflare/privacypass-issuer.git#fab155f47cb14a73678f099a46de40afbc5649a8"
+    port: "8787"
+    test:
+      name: pp-issuer-public.research.cloudflare.com
+      tlsConfig:
+        cert: issuer.crt
+        key: issuer.key
+    deploy:
+      wrangler: "./production.issuer.wrangler.toml"
+      environment: production
+      envFile: .env
+      immediateDeployment: false
+  origin:
+    url: "https://demo-pat.research.cloudflare.com"
+
+config:
+  directory: "dist"

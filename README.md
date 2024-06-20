@@ -24,6 +24,12 @@ npm run start -- dev --config ./examples/git.config.yaml
 npm run start -- deploy --config ./examples/git.config.yaml --service issuer
 ```
 
+* Test end-to-end (only support issuer)
+
+```shell
+npm run start -- test --config ./examples/testE2E.config.yaml --service issuer
+```
+
 ## Config
 
 Example config files are available in [./examples](./examples). You need to place one in the root folder with the name `config.yaml`. For instance, `cp examples/git.config.yaml config.yaml`.
