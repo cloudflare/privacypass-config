@@ -1,0 +1,7 @@
+{
+    "yaml.schemas": {
+        ".vscode/ops-schema.json": [
+            "**/*.config.yaml"
+        ]
+    }
+}

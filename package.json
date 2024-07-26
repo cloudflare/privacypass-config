@@ -1,17 +1,19 @@
 {
   "name": "privacypass-config",
-	"version": "0.1.0",
-	"type": "module",
-	"author": "Thibault Meunier <thibault@cloudflare.com>",
-	"contributors": [
-		"Thibault Meunier <thibault@cloudflare.com>"
-	],
-	"license": "Apache-2.0",
-	"homepage": "https://github.com/cloudflare/privacypass-config#readme",
-	"repository": "github:cloudflare/privacypass-config",
+  "version": "0.1.0",
+  "type": "module",
+  "author": "Thibault Meunier <thibault@cloudflare.com>",
+  "contributors": [
+    "Thibault Meunier <thibault@cloudflare.com>"
+  ],
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/cloudflare/privacypass-config#readme",
+  "repository": "github:cloudflare/privacypass-config",
   "scripts": {
     "format": "prettier src/*.ts --write",
-    "lint": "prettier src/*.ts",
+    "lint:schema": "ajv validate -s .vscode/ops-schema.json -d \"**/*.config.yaml\"",
+    "lint:typescript": "prettier --check src/*.ts",
+    "lint": "npm run lint:typescript && npm run lint:schema",
     "start": "node --loader ts-node/esm ./src/index.ts"
   },
   "dependencies": {
@@ -24,6 +26,7 @@
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
+    "ajv-cli": "^5.0.0",
     "prettier": "^3.0.3"
   }
 }
