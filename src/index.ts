@@ -229,9 +229,13 @@ async function deployService(serviceName: ServiceName, app: AppConfig) {
   } = deploy;
 
   let options: Options<"utf8"> = { cwd };
+  let cronSchedule;
   if (envFile) {
     const env = dotenv.parse(fs.readFileSync(envFile));
     options = { ...options, env: { ...process.env, ...env } };
+    if (env.ROTATION_CRON_STRING) {
+      cronSchedule = env.ROTATION_CRON_STRING;
+    }
   }
 
   const extraArgs = environment ? ["--env", environment] : [];
@@ -244,6 +248,10 @@ async function deployService(serviceName: ServiceName, app: AppConfig) {
   const command = immediate
     ? ["deploy"]
     : ["versions", "upload", "--experimental-versions"];
+
+  if (cronSchedule) {
+    extraArgs.push("--triggers", cronSchedule);
+  }
 
   return execa(
     "npx",
